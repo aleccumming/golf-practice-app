@@ -9,9 +9,9 @@ export const shotsRouter = Router();
 const createSchema = z.object({
   session_id: z.number().int().positive().nullable().optional(),
   club_id: z.number().int().positive(),
-  shot_type: z.enum(["tee", "approach", "chip", "punch"]),
+  shot_type: z.enum(["tee", "approach", "chip", "punch", "layup"]),
   target_line: z.enum(["straight", "draw", "fade"]),
-  miss_direction: z.enum(["straight", "left", "right", "pull", "push", "hook", "slice"]),
+  shot_result: z.enum(["good", "pull", "push", "hook", "slice"]),
   miss_distance_yds: z.number().nullable().optional(),
   contact: z.enum(["flush", "thin", "fat", "toe", "heel"]).nullable().optional(),
   lie: z.enum(["tee", "fairway", "rough", "sand", "range_mat"]),

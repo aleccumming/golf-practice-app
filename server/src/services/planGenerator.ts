@@ -2,19 +2,17 @@ import { drillsRepo } from "../repositories/drills.repo.js";
 import { practicePlansRepo } from "../repositories/practicePlans.repo.js";
 import type { PlanDrillEntry, PlanTargetInput } from "../repositories/practicePlans.repo.js";
 import {
-  getShotMissPatterns,
+  getShotResultPatterns,
   getShotContactPatterns,
   getFlaggedPuttPatterns,
 } from "./patternDetection.js";
 import type { Drill, DrillCategory, PracticePlan, SessionType } from "../types/models.js";
 
-const MISS_TAGS: Record<string, string[]> = {
-  pull: ["pull", "pull_left", "left"],
-  push: ["push", "push_right", "right"],
-  hook: ["hook", "left"],
-  slice: ["slice", "right"],
-  left: ["left"],
-  right: ["right"],
+const SHOT_RESULT_TAGS: Record<string, string[]> = {
+  pull: ["pull"],
+  push: ["push"],
+  hook: ["hook"],
+  slice: ["slice"],
 };
 
 const CONTACT_TAGS: Record<string, string[]> = {
@@ -25,7 +23,7 @@ const CONTACT_TAGS: Record<string, string[]> = {
 };
 
 interface FlaggedPattern {
-  patternType: "shot_miss_direction" | "shot_contact" | "putt_break_bias" | "putt_short_miss";
+  patternType: "shot_result" | "shot_contact" | "putt_break_bias" | "putt_short_miss";
   clubId: number | null;
   drillTags: string[];
   tag: string;
@@ -47,12 +45,12 @@ async function collectFlaggedPatterns(
 ): Promise<FlaggedPattern[]> {
   const patterns: FlaggedPattern[] = [];
 
-  for (const club of await getShotMissPatterns(userId, window, sessionType)) {
-    if (!club.flagged || !MISS_TAGS[club.flagged.value]) continue;
+  for (const club of await getShotResultPatterns(userId, window, sessionType)) {
+    if (!club.flagged || !SHOT_RESULT_TAGS[club.flagged.value]) continue;
     patterns.push({
-      patternType: "shot_miss_direction",
+      patternType: "shot_result",
       clubId: club.club_id,
-      drillTags: MISS_TAGS[club.flagged.value],
+      drillTags: SHOT_RESULT_TAGS[club.flagged.value],
       tag: club.flagged.value,
       count: club.flagged.count,
       total: club.total,

@@ -1,16 +1,4 @@
-:root {
-  color-scheme: light dark;
-  font: 16px/145% system-ui, "Segoe UI", Roboto, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
+@import "./styles/theme.css";
 
 #root {
   min-height: 100svh;

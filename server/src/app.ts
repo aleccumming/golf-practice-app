@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { healthRouter } from "./routes/health.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { usersRouter } from "./routes/users.routes.js";
 import { clubsRouter } from "./routes/clubs.routes.js";
 import { sessionsRouter } from "./routes/sessions.routes.js";
 import { shotsRouter } from "./routes/shots.routes.js";
@@ -25,6 +26,7 @@ export function createApp() {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
 
+  app.use("/api/users", requireAuth, usersRouter);
   app.use("/api/clubs", requireAuth, clubsRouter);
   app.use("/api/sessions", requireAuth, sessionsRouter);
   app.use("/api/shots", requireAuth, shotsRouter);

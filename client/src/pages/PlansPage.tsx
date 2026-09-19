@@ -28,19 +28,14 @@ export function PlansPage() {
   }
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 480, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: 18, margin: 0 }}>Practice plans</h1>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={generating}
-          style={{ fontSize: 13, padding: "8px 14px", borderRadius: 8, border: "none", background: "#2f8f4e", color: "#fff" }}
-        >
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Practice plans</h1>
+        <button type="button" className="btn btn-primary btn-sm" onClick={handleGenerate} disabled={generating}>
           {generating ? "Generating..." : "Generate plan"}
         </button>
       </div>
-      {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
+      {error && <p style={{ color: "var(--color-danger)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
       <PracticePlanList plans={plans} />
     </div>
   );

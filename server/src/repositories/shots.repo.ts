@@ -34,7 +34,7 @@ export const shotsRepo = {
   async create(userId: number, input: CreateShot): Promise<Shot> {
     const { rows } = await pool.query<Shot>(
       `INSERT INTO shots
-        (user_id, session_id, club_id, shot_type, target_line, miss_direction, miss_distance_yds,
+        (user_id, session_id, club_id, shot_type, target_line, shot_result, miss_distance_yds,
          contact, lie, distance_to_target_yds, confidence_pre_shot, notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING *`,
@@ -44,7 +44,7 @@ export const shotsRepo = {
         input.club_id,
         input.shot_type,
         input.target_line,
-        input.miss_direction,
+        input.shot_result,
         input.miss_distance_yds,
         input.contact,
         input.lie,
@@ -61,7 +61,7 @@ export const shotsRepo = {
     if (!existing) return undefined;
     const merged = { ...existing, ...input };
     const { rows } = await pool.query<Shot>(
-      `UPDATE shots SET session_id=$1, club_id=$2, shot_type=$3, target_line=$4, miss_direction=$5,
+      `UPDATE shots SET session_id=$1, club_id=$2, shot_type=$3, target_line=$4, shot_result=$5,
         miss_distance_yds=$6, contact=$7, lie=$8, distance_to_target_yds=$9, confidence_pre_shot=$10, notes=$11
        WHERE id=$12 AND user_id=$13
        RETURNING *`,
@@ -70,7 +70,7 @@ export const shotsRepo = {
         merged.club_id,
         merged.shot_type,
         merged.target_line,
-        merged.miss_direction,
+        merged.shot_result,
         merged.miss_distance_yds,
         merged.contact,
         merged.lie,

@@ -3,9 +3,9 @@ import { ClubPicker } from "../pickers/ClubPicker";
 import { ShotTypePicker } from "../pickers/ShotTypePicker";
 import { TargetLinePicker } from "../pickers/TargetLinePicker";
 import { ContactPicker } from "../pickers/ContactPicker";
-import { MissCompass } from "../compass/MissCompass";
+import { ShotResultPicker } from "../pickers/ShotResultPicker";
 import { shotsApi } from "../../api/shots";
-import type { Club, Contact, Lie, MissDirection, ShotType, TargetLine } from "../../types";
+import type { Club, Contact, Lie, ShotResult, ShotType, TargetLine } from "../../types";
 
 const LIE_OPTIONS: { value: Lie; label: string }[] = [
   { value: "range_mat", label: "Mat" },
@@ -15,30 +15,37 @@ const LIE_OPTIONS: { value: Lie; label: string }[] = [
   { value: "sand", label: "Sand" },
 ];
 
-export function ShotLogForm({ clubs, sessionId }: { clubs: Club[]; sessionId: number | null }) {
+export function ShotLogForm({
+  clubs,
+  ensureSession,
+}: {
+  clubs: Club[];
+  ensureSession: () => Promise<number | null>;
+}) {
   const [clubId, setClubId] = useState<number | null>(null);
   const [shotType, setShotType] = useState<ShotType | null>(null);
   const [targetLine, setTargetLine] = useState<TargetLine>("straight");
-  const [missDirection, setMissDirection] = useState<MissDirection | null>(null);
+  const [shotResult, setShotResult] = useState<ShotResult | null>(null);
   const [contact, setContact] = useState<Contact | null>(null);
   const [lie, setLie] = useState<Lie>("range_mat");
   const [saving, setSaving] = useState(false);
   const [loggedCount, setLoggedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const canSave = clubId !== null && shotType !== null && missDirection !== null && !saving;
+  const canSave = clubId !== null && shotType !== null && shotResult !== null && !saving;
 
   async function handleSave() {
-    if (!canSave || clubId === null || shotType === null || missDirection === null) return;
+    if (!canSave || clubId === null || shotType === null || shotResult === null) return;
     setSaving(true);
     setError(null);
     try {
+      const sessionId = await ensureSession();
       await shotsApi.create({
         session_id: sessionId,
         club_id: clubId,
         shot_type: shotType,
         target_line: targetLine,
-        miss_direction: missDirection,
+        shot_result: shotResult,
         miss_distance_yds: null,
         contact,
         lie,
@@ -47,7 +54,7 @@ export function ShotLogForm({ clubs, sessionId }: { clubs: Club[]; sessionId: nu
         notes: null,
       });
       setLoggedCount((c) => c + 1);
-      setMissDirection(null);
+      setShotResult(null);
       setContact(null);
     } catch {
       setError("Failed to save shot");
@@ -57,47 +64,45 @@ export function ShotLogForm({ clubs, sessionId }: { clubs: Club[]; sessionId: nu
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Club</h3>
+    <div>
+      <section className="section">
+        <h3 className="section-label">Club</h3>
         <ClubPicker clubs={clubs} value={clubId} onChange={setClubId} />
       </section>
 
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Shot type</h3>
+      <section className="section">
+        <h3 className="section-label">Shot type</h3>
         <ShotTypePicker value={shotType} onChange={setShotType} />
       </section>
 
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Miss direction</h3>
-        <MissCompass value={missDirection ?? "straight"} onChange={setMissDirection} />
+      <section className="section">
+        <h3 className="section-label">What were you trying to hit?</h3>
+        <TargetLinePicker value={targetLine} onChange={setTargetLine} />
       </section>
 
-      <details>
-        <summary style={{ fontSize: 13, color: "#666", cursor: "pointer" }}>More options (target line, contact, lie)</summary>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 12 }}>
+      <section className="section">
+        <h3 className="section-label">Result</h3>
+        <ShotResultPicker value={shotResult} onChange={setShotResult} />
+      </section>
+
+      <details className="section">
+        <summary style={{ fontSize: 13, color: "var(--color-text-muted)", cursor: "pointer", fontWeight: 600 }}>
+          More options (contact, lie)
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 14 }}>
           <div>
-            <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Target line</h3>
-            <TargetLinePicker value={targetLine} onChange={setTargetLine} />
-          </div>
-          <div>
-            <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Contact (optional)</h3>
+            <h3 className="section-label">Contact (optional)</h3>
             <ContactPicker value={contact} onChange={setContact} />
           </div>
           <div>
-            <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Lie</h3>
+            <h3 className="section-label">Lie</h3>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {LIE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
+                  className={`chip chip-pill${lie === opt.value ? " is-active" : ""}`}
                   onClick={() => setLie(opt.value)}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: 8,
-                    border: lie === opt.value ? "2px solid #2f8f4e" : "1px solid #ccc",
-                    background: lie === opt.value ? "#e6f4ea" : "#fff",
-                  }}
                 >
                   {opt.label}
                 </button>
@@ -107,24 +112,12 @@ export function ShotLogForm({ clubs, sessionId }: { clubs: Club[]; sessionId: nu
         </div>
       </details>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={!canSave}
-        style={{
-          fontSize: 18,
-          padding: 16,
-          borderRadius: 10,
-          background: canSave ? "#2f8f4e" : "#aaa",
-          color: "#fff",
-          border: "none",
-        }}
-      >
+      <button type="button" className="btn btn-primary btn-lg btn-block" onClick={handleSave} disabled={!canSave}>
         {saving ? "Saving..." : "Save shot"}
       </button>
 
-      {error && <p style={{ color: "#c0392b" }}>{error}</p>}
-      <p style={{ fontSize: 13, color: "#666" }}>Logged this session: {loggedCount}</p>
+      {error && <p style={{ color: "var(--color-danger)", fontSize: 13, marginTop: 10 }}>{error}</p>}
+      <p className="hint" style={{ marginTop: 10 }}>Logged this session: {loggedCount}</p>
     </div>
   );
 }

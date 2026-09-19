@@ -15,11 +15,11 @@ export function PlanDetailPage() {
   if (!plan) return <div style={{ padding: 16 }}>Loading...</div>;
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 480, margin: "0 auto" }}>
-      <Link to="/plans" style={{ fontSize: 13, color: "#666" }}>
+    <div className="page">
+      <Link to="/plans" style={{ fontSize: 13, color: "var(--color-text-muted)", fontWeight: 600 }}>
         &larr; All plans
       </Link>
-      <h1 style={{ fontSize: 18, margin: "8px 0 16px" }}>Practice plan</h1>
+      <h1 className="page-title" style={{ margin: "10px 0 18px" }}>Practice plan</h1>
       <PracticePlanView plan={plan} />
     </div>
   );

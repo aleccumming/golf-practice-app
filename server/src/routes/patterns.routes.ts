@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import {
-  getShotMissPatterns,
+  getShotResultPatterns,
   getShotContactPatterns,
   getPuttDistanceBuckets,
   getPuttBreakBias,
@@ -23,7 +23,7 @@ function parseFilters(query: Record<string, unknown>, defaultWindow: number) {
 patternsRouter.get("/shots", async (req, res) => {
   const { window, sessionType } = parseFilters(req.query, 25);
   res.json({
-    missDirection: await getShotMissPatterns(req.userId!, window, sessionType),
+    result: await getShotResultPatterns(req.userId!, window, sessionType),
     contact: await getShotContactPatterns(req.userId!, window, sessionType),
   });
 });

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { clubsApi } from "../api/clubs";
 import { sessionsApi } from "../api/sessions";
+import { sortClubs } from "../lib/clubOrder";
 import { ShotLogForm } from "../components/logging/ShotLogForm";
 import { PuttLogForm } from "../components/logging/PuttLogForm";
+import type { useActiveSession } from "../hooks/useActiveSession";
 import type { Club, Session, SessionType } from "../types";
 
 const SESSION_TYPES: { value: SessionType; label: string }[] = [
@@ -15,70 +17,87 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function LogPage() {
+export function LogPage({ activeSessionState }: { activeSessionState: ReturnType<typeof useActiveSession> }) {
+  const { activeSession, setActiveSession, startSession, ensureSession } = activeSessionState;
   const [clubs, setClubs] = useState<Club[]>([]);
   const [tab, setTab] = useState<"shot" | "putt">("shot");
-  const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [starting, setStarting] = useState(false);
+  const [resumableSession, setResumableSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    clubsApi.list().then(setClubs);
+    clubsApi.list().then((list) => setClubs(sortClubs(list)));
   }, []);
 
-  async function startSession(type: SessionType) {
-    const session = await sessionsApi.create({ date: todayIso(), type });
+  async function openStartPanel() {
+    setStarting(true);
+    const sessions = await sessionsApi.list({ limit: 1 });
+    const mostRecent = sessions[0];
+    setResumableSession(mostRecent && mostRecent.date === todayIso() ? mostRecent : null);
+  }
+
+  function resumeSession(session: Session) {
     setActiveSession(session);
     setStarting(false);
   }
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 480, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h1 style={{ fontSize: 18, margin: 0 }}>Log</h1>
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Log</h1>
         {activeSession ? (
-          <button
-            type="button"
-            onClick={() => setActiveSession(null)}
-            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", background: "#fff" }}
-          >
-            {activeSession.type} session — end
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setActiveSession(null)}>
+            {activeSession.name ?? `${activeSession.type} session`} &middot; End
           </button>
         ) : starting ? (
-          <div style={{ display: "flex", gap: 6 }}>
-            {SESSION_TYPES.map((t) => (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            {resumableSession && (
               <button
-                key={t.value}
                 type="button"
-                onClick={() => startSession(t.value)}
-                style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", background: "#fff" }}
+                className="btn btn-sm"
+                onClick={() => resumeSession(resumableSession)}
+                style={{ background: "var(--color-accent-soft)", borderColor: "var(--color-accent)", color: "var(--color-accent-text)" }}
               >
-                {t.label}
+                Resume {resumableSession.name ?? `${resumableSession.type} session`}
               </button>
-            ))}
+            )}
+            <div style={{ display: "flex", gap: 6 }}>
+              {SESSION_TYPES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    startSession(t.value);
+                    setStarting(false);
+                  }}
+                >
+                  New {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setStarting(true)}
-            style={{ fontSize: 12, padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", background: "#fff" }}
-          >
+          <button type="button" className="btn btn-secondary btn-sm" onClick={openStartPanel}>
             Start session
           </button>
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, background: "var(--color-surface-sunken)", borderRadius: "var(--radius-md)", padding: 4 }}>
         <button
           type="button"
           onClick={() => setTab("shot")}
           style={{
             flex: 1,
-            padding: 12,
-            borderRadius: 8,
+            padding: "10px 0",
+            borderRadius: "var(--radius-sm)",
             border: "none",
-            background: tab === "shot" ? "#2f8f4e" : "#eee",
-            color: tab === "shot" ? "#fff" : "#333",
-            fontWeight: 600,
+            background: tab === "shot" ? "var(--color-surface)" : "transparent",
+            color: tab === "shot" ? "var(--color-text)" : "var(--color-text-muted)",
+            fontWeight: 700,
+            fontSize: 14,
+            boxShadow: tab === "shot" ? "var(--shadow-xs)" : "none",
+            cursor: "pointer",
           }}
         >
           Shot
@@ -88,12 +107,15 @@ export function LogPage() {
           onClick={() => setTab("putt")}
           style={{
             flex: 1,
-            padding: 12,
-            borderRadius: 8,
+            padding: "10px 0",
+            borderRadius: "var(--radius-sm)",
             border: "none",
-            background: tab === "putt" ? "#2f8f4e" : "#eee",
-            color: tab === "putt" ? "#fff" : "#333",
-            fontWeight: 600,
+            background: tab === "putt" ? "var(--color-surface)" : "transparent",
+            color: tab === "putt" ? "var(--color-text)" : "var(--color-text-muted)",
+            fontWeight: 700,
+            fontSize: 14,
+            boxShadow: tab === "putt" ? "var(--shadow-xs)" : "none",
+            cursor: "pointer",
           }}
         >
           Putt
@@ -101,9 +123,9 @@ export function LogPage() {
       </div>
 
       {tab === "shot" ? (
-        <ShotLogForm clubs={clubs} sessionId={activeSession?.id ?? null} />
+        <ShotLogForm clubs={clubs} ensureSession={() => ensureSession("range")} />
       ) : (
-        <PuttLogForm sessionId={activeSession?.id ?? null} />
+        <PuttLogForm ensureSession={() => ensureSession("putting_green")} />
       )}
     </div>
   );

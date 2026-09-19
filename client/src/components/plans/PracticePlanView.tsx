@@ -18,23 +18,23 @@ export function PracticePlanView({ plan: initialPlan }: { plan: PracticePlanDeta
   const doneCount = plan.drills.filter((d) => d.completed).length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div>
-        {plan.based_on_pattern && <p style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>{plan.based_on_pattern}</p>}
-        <p style={{ fontSize: 12, color: "#999", margin: 0 }}>
+    <div>
+      <div className="card" style={{ marginBottom: 20, background: "var(--color-accent-soft)", border: "none" }}>
+        {plan.based_on_pattern && <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-accent-text)", marginBottom: 4 }}>{plan.based_on_pattern}</p>}
+        <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
           {plan.total_duration_min} min &middot; {doneCount}/{plan.drills.length} done
         </p>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="stack" style={{ marginBottom: 20 }}>
         {plan.drills.map((pd) => (
           <DrillCard key={pd.id} drill={pd.drill} completed={pd.completed} onToggleCompleted={(c) => toggleDrill(pd.id, c)} />
         ))}
       </div>
 
-      {doneCount > 0 && (
+      {plan.targets.length > 0 && (
         <div>
-          <h2 style={{ fontSize: 14, margin: "8px 0 10px" }}>Progress since this plan</h2>
+          <h2 className="section-label">Progress since this plan</h2>
           <ProgressView planId={plan.id} />
         </div>
       )}

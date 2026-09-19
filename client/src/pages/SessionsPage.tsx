@@ -12,10 +12,10 @@ export function SessionsPage() {
   }, []);
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 480, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h1 style={{ fontSize: 18, margin: 0 }}>Sessions</h1>
-        <Link to="/" style={{ fontSize: 13 }}>
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Sessions</h1>
+        <Link to="/" className="btn btn-secondary btn-sm">
           Log new
         </Link>
       </div>

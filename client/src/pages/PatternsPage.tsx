@@ -16,19 +16,19 @@ export function PatternsPage() {
   }, [sessionType]);
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif", maxWidth: 480, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 18, margin: "0 0 12px" }}>Patterns</h1>
+    <div className="page">
+      <h1 className="page-title" style={{ marginBottom: 12 }}>Patterns</h1>
 
       <SessionTypeFilter value={sessionType} onChange={setSessionType} />
-      <p style={{ fontSize: 11, color: "#999", margin: "6px 0 20px" }}>
+      <p className="hint" style={{ margin: "8px 0 24px" }}>
         Range and course shots are combined by default (v1) for a larger sample size — use the filter above to isolate one.
       </p>
 
-      <h2 style={{ fontSize: 15, margin: "0 0 10px" }}>Full swing — miss direction</h2>
-      {shotPatterns ? <ShotPatternSummary clubs={shotPatterns.missDirection} /> : <p>Loading...</p>}
+      <h2 className="section-label">Full swing — result</h2>
+      {shotPatterns ? <ShotPatternSummary clubs={shotPatterns.result} /> : <p className="empty-state">Loading...</p>}
 
-      <h2 style={{ fontSize: 15, margin: "24px 0 10px" }}>Putting</h2>
-      {puttPatterns ? <PuttPatternSummary data={puttPatterns} /> : <p>Loading...</p>}
+      <h2 className="section-label" style={{ marginTop: 26 }}>Putting</h2>
+      {puttPatterns ? <PuttPatternSummary data={puttPatterns} /> : <p className="empty-state">Loading...</p>}
     </div>
   );
 }

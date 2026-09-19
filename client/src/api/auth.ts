@@ -8,8 +8,6 @@ export interface AuthStatus {
 
 export const authApi = {
   status: () => http.get<AuthStatus>("/auth/status"),
-  signup: (email: string, password: string, display_name?: string) =>
-    http.post<AuthStatus>("/auth/signup", { email, password, display_name }),
-  login: (email: string, password: string) => http.post<AuthStatus>("/auth/login", { email, password }),
+  google: (credential: string) => http.post<AuthStatus>("/auth/google", { credential }),
   logout: () => http.post<AuthStatus>("/auth/logout"),
 };

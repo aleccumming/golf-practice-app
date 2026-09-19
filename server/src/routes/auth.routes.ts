@@ -1,5 +1,5 @@
 import { Router } from "express";
-import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { z } from "zod";
 import { createSessionToken, readSession, SESSION_COOKIE } from "../middleware/auth.js";
 import { validateBody } from "../middleware/validate.js";
@@ -7,15 +7,13 @@ import { HttpError } from "../middleware/errorHandler.js";
 import { usersRepo } from "../repositories/users.repo.js";
 import { seedClubs } from "../db/seed.js";
 import { config } from "../config.js";
+import { publicUser } from "../lib/publicUser.js";
 
 export const authRouter = Router();
 
-const signupSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  display_name: z.string().min(1).nullable().optional(),
-});
-const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
+const googleClient = new OAuth2Client(config.googleClientId);
+
+const googleAuthSchema = z.object({ credential: z.string().min(1) });
 
 const cookieOptions = {
   httpOnly: true,
@@ -24,31 +22,31 @@ const cookieOptions = {
   maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
-function publicUser(user: { id: number; email: string; display_name: string | null }) {
-  return { id: user.id, email: user.email, display_name: user.display_name };
-}
-
-authRouter.post("/signup", validateBody(signupSchema), async (req, res) => {
-  if (await usersRepo.findByEmail(req.body.email)) {
-    throw new HttpError(409, "An account with that email already exists");
+authRouter.post("/google", validateBody(googleAuthSchema), async (req, res) => {
+  const ticket = await googleClient
+    .verifyIdToken({ idToken: req.body.credential, audience: config.googleClientId })
+    .catch(() => null);
+  const payload = ticket?.getPayload();
+  if (!payload || !payload.email) {
+    throw new HttpError(401, "Invalid Google credential");
   }
-  const password_hash = await bcrypt.hash(req.body.password, 10);
-  const user = await usersRepo.create({
-    email: req.body.email,
-    password_hash,
-    display_name: req.body.display_name ?? null,
-  });
-  await seedClubs(user.id);
-  res.cookie(SESSION_COOKIE, createSessionToken(user.id), cookieOptions);
-  res.status(201).json({ authenticated: true, user: publicUser(user) });
-});
 
-authRouter.post("/login", validateBody(loginSchema), async (req, res) => {
-  const user = await usersRepo.findByEmail(req.body.email);
-  if (!user || !(await bcrypt.compare(req.body.password, user.password_hash))) {
-    res.status(401).json({ error: "Incorrect email or password" });
-    return;
+  let user = await usersRepo.findByGoogleId(payload.sub);
+  if (!user) {
+    const existing = await usersRepo.findByEmail(payload.email);
+    if (existing) {
+      user = await usersRepo.linkGoogleId(existing.id, payload.sub, payload.picture ?? null);
+    } else {
+      user = await usersRepo.createWithGoogle({
+        email: payload.email,
+        google_id: payload.sub,
+        display_name: payload.name ?? null,
+        avatar_url: payload.picture ?? null,
+      });
+      await seedClubs(user.id);
+    }
   }
+
   res.cookie(SESSION_COOKIE, createSessionToken(user.id), cookieOptions);
   res.json({ authenticated: true, user: publicUser(user) });
 });

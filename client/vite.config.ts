@@ -45,6 +45,16 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5185,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3057',
+        changeOrigin: true,
+      },
+    },
+    allowedHosts: ['.trycloudflare.com'],
+  },
   test: {
     environment: 'node',
   },

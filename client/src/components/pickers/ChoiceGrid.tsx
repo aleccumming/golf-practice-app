@@ -15,27 +15,17 @@ export function ChoiceGrid<T extends string>({
   columns?: number;
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 8 }}>
-      {options.map((opt) => {
-        const active = value === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            style={{
-              padding: "14px 8px",
-              borderRadius: 10,
-              border: active ? "2px solid #2f8f4e" : "1px solid #ccc",
-              background: active ? "#e6f4ea" : "#fff",
-              fontWeight: active ? 700 : 500,
-              fontSize: 15,
-            }}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+    <div className="chip-grid" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`chip${value === opt.value ? " is-active" : ""}`}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }

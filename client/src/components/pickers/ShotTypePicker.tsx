@@ -6,8 +6,9 @@ const OPTIONS: { value: ShotType; label: string }[] = [
   { value: "approach", label: "Approach" },
   { value: "chip", label: "Chip" },
   { value: "punch", label: "Punch" },
+  { value: "layup", label: "Layup" },
 ];
 
 export function ShotTypePicker({ value, onChange }: { value: ShotType | null; onChange: (v: ShotType) => void }) {
-  return <ChoiceGrid options={OPTIONS} value={value} onChange={onChange} columns={4} />;
+  return <ChoiceGrid options={OPTIONS} value={value} onChange={onChange} columns={3} />;
 }

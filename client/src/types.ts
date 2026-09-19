@@ -1,8 +1,8 @@
 export type ClubType = "wood" | "iron" | "wedge" | "putter" | "hybrid";
 export type SessionType = "range" | "course" | "putting_green";
-export type ShotType = "tee" | "approach" | "chip" | "punch";
+export type ShotType = "tee" | "approach" | "chip" | "punch" | "layup";
 export type TargetLine = "straight" | "draw" | "fade";
-export type MissDirection = "straight" | "left" | "right" | "pull" | "push" | "hook" | "slice";
+export type ShotResult = "good" | "pull" | "push" | "hook" | "slice";
 export type Contact = "flush" | "thin" | "fat" | "toe" | "heel";
 export type Lie = "tee" | "fairway" | "rough" | "sand" | "range_mat";
 export type PuttBreak = "straight" | "left_to_right" | "right_to_left";
@@ -10,10 +10,24 @@ export type PuttSlope = "uphill" | "downhill" | "flat";
 export type PuttResult = "made" | "missed_left" | "missed_right" | "missed_short" | "missed_long";
 export type DrillCategory = "full_swing" | "short_game" | "putting";
 
+export type Handedness = "left" | "right";
+export type PrimaryGoal = "lower_scores" | "full_swing" | "short_game" | "putting";
+
 export interface User {
   id: number;
   email: string;
   display_name: string | null;
+  avatar_url: string | null;
+  handicap: number | null;
+  handedness: Handedness | null;
+  primary_goal: PrimaryGoal | null;
+  skill_driving: number | null;
+  skill_irons: number | null;
+  skill_short_game: number | null;
+  skill_putting: number | null;
+  practice_frequency_per_week: number | null;
+  practice_session_minutes: number | null;
+  onboarding_completed_at: string | null;
 }
 
 export interface Club {
@@ -27,6 +41,7 @@ export interface Session {
   id: number;
   date: string;
   type: SessionType;
+  name: string | null;
   duration_min: number | null;
   notes: string | null;
   created_at: string;
@@ -42,7 +57,7 @@ export interface Shot {
   club_id: number;
   shot_type: ShotType;
   target_line: TargetLine;
-  miss_direction: MissDirection;
+  shot_result: ShotResult;
   miss_distance_yds: number | null;
   contact: Contact | null;
   lie: Lie;

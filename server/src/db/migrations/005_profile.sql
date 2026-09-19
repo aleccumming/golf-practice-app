@@ -1,0 +1,10 @@
+ALTER TABLE users ADD COLUMN IF NOT EXISTS handicap NUMERIC;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS handedness TEXT CHECK (handedness IN ('left', 'right'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS primary_goal TEXT CHECK (primary_goal IN ('lower_scores', 'full_swing', 'short_game', 'putting'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skill_driving SMALLINT CHECK (skill_driving BETWEEN 1 AND 5);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skill_irons SMALLINT CHECK (skill_irons BETWEEN 1 AND 5);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skill_short_game SMALLINT CHECK (skill_short_game BETWEEN 1 AND 5);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skill_putting SMALLINT CHECK (skill_putting BETWEEN 1 AND 5);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS practice_frequency_per_week SMALLINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS practice_session_minutes SMALLINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;

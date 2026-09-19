@@ -41,8 +41,11 @@ export const practicePlansRepo = {
   },
 
   async drillsFor(planId: number): Promise<PracticePlanDrillRow[]> {
-    const { rows } = await pool.query<Drill & { id: number; drill_id: number; order_index: number; completed: boolean }>(
-      `SELECT ppd.id, ppd.drill_id, ppd.order_index, ppd.completed, d.*
+    const { rows } = await pool.query<
+      Omit<Drill, "id"> & { id: number; drill_id: number; order_index: number; completed: boolean }
+    >(
+      `SELECT ppd.id, ppd.drill_id, ppd.order_index, ppd.completed,
+        d.name, d.category, d.targets_miss_pattern, d.club_focus_id, d.description, d.est_duration_min, d.difficulty
        FROM practice_plan_drills ppd
        JOIN drills d ON d.id = ppd.drill_id
        WHERE ppd.practice_plan_id = $1

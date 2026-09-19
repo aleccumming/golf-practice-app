@@ -10,7 +10,7 @@ export interface ClubMissBreakdown {
 }
 
 export interface ShotPatterns {
-  missDirection: ClubMissBreakdown[];
+  result: ClubMissBreakdown[];
   contact: ClubMissBreakdown[];
 }
 

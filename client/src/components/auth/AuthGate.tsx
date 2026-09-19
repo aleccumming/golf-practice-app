@@ -1,107 +1,130 @@
-import { useState } from "react";
-import type { FormEvent, ReactNode } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import type { useAuth } from "../../hooks/useAuth";
 import { ApiError } from "../../api/http";
 
-export function AuthGate({ children }: { children: ReactNode }) {
-  const { authenticated, signup, login } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (parent: HTMLElement, options: Record<string, string>) => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+export function AuthGate({
+  auth,
+  children,
+}: {
+  auth: ReturnType<typeof useAuth>;
+  children: ReactNode;
+}) {
+  const { authenticated, loginWithGoogle } = auth;
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (authenticated !== false || !buttonRef.current) return;
+    if (!GOOGLE_CLIENT_ID) {
+      setError("Google sign-in is not configured (missing VITE_GOOGLE_CLIENT_ID).");
+      return;
+    }
+
+    let cancelled = false;
+    function render() {
+      if (cancelled || !window.google || !buttonRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID!,
+        callback: async (response) => {
+          try {
+            const ok = await loginWithGoogle(response.credential);
+            if (!ok) setError("Sign-in failed");
+          } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Sign-in failed");
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(buttonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        width: "280",
+      });
+    }
+
+    if (window.google) {
+      render();
+    } else {
+      const interval = setInterval(() => {
+        if (window.google) {
+          clearInterval(interval);
+          render();
+        }
+      }, 100);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
+    }
+  }, [authenticated, loginWithGoogle]);
 
   if (authenticated === null) {
-    return <div style={{ padding: 24 }}>Loading...</div>;
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100svh", color: "var(--color-text-faint)", fontSize: 14 }}>
+        Loading...
+      </div>
+    );
   }
 
   if (!authenticated) {
-    async function handleSubmit(e: FormEvent) {
-      e.preventDefault();
-      setSubmitting(true);
-      setError(null);
-      try {
-        const ok =
-          mode === "signup" ? await signup(email, password, displayName || undefined) : await login(email, password);
-        if (!ok) setError(mode === "signup" ? "Sign up failed" : "Incorrect email or password");
-      } catch (err) {
-        setError(err instanceof ApiError ? err.message : mode === "signup" ? "Sign up failed" : "Login failed");
-      } finally {
-        setSubmitting(false);
-      }
-    }
-
     return (
-      <div style={{ padding: 24, maxWidth: 320, margin: "80px auto", fontFamily: "system-ui, sans-serif" }}>
-        <h1 style={{ fontSize: 20 }}>Golf Practice App</h1>
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <button
-            type="button"
-            onClick={() => setMode("login")}
-            style={{
-              flex: 1,
-              padding: 10,
-              borderRadius: 8,
-              border: "none",
-              background: mode === "login" ? "#2f8f4e" : "#eee",
-              color: mode === "login" ? "#fff" : "#333",
-              fontWeight: 600,
-            }}
-          >
-            Log in
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            style={{
-              flex: 1,
-              padding: 10,
-              borderRadius: 8,
-              border: "none",
-              background: mode === "signup" ? "#2f8f4e" : "#eee",
-              color: mode === "signup" ? "#fff" : "#333",
-              fontWeight: 600,
-            }}
-          >
-            Sign up
-          </button>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100svh",
+          padding: 24,
+          background: "var(--color-bg)",
+        }}
+      >
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            background: "var(--color-accent-soft)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="var(--color-accent)" strokeWidth="1.8" />
+            <circle cx="9.5" cy="9" r="0.8" fill="var(--color-accent)" />
+            <circle cx="13" cy="8" r="0.8" fill="var(--color-accent)" />
+            <circle cx="12" cy="12" r="0.8" fill="var(--color-accent)" />
+            <circle cx="9.5" cy="14" r="0.8" fill="var(--color-accent)" />
+            <circle cx="14.5" cy="13" r="0.8" fill="var(--color-accent)" />
+          </svg>
         </div>
-
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <input
-            type="email"
-            autoFocus
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ fontSize: 16, padding: 12, borderRadius: 8, border: "1px solid #ccc" }}
-          />
-          {mode === "signup" && (
-            <input
-              type="text"
-              placeholder="Display name (optional)"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              style={{ fontSize: 16, padding: 12, borderRadius: 8, border: "1px solid #ccc" }}
-            />
-          )}
-          <input
-            type="password"
-            placeholder={mode === "signup" ? "Password (min 8 characters)" : "Password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ fontSize: 16, padding: 12, borderRadius: 8, border: "1px solid #ccc" }}
-          />
-          <button
-            type="submit"
-            disabled={submitting || !email || !password}
-            style={{ fontSize: 16, padding: 12, borderRadius: 8, background: "#2f8f4e", color: "#fff", border: "none" }}
-          >
-            {submitting ? "Please wait..." : mode === "signup" ? "Create account" : "Log in"}
-          </button>
-          {error && <p style={{ color: "#c0392b", fontSize: 14 }}>{error}</p>}
-        </form>
+        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 6 }}>Golf Practice</h1>
+        <p style={{ fontSize: 14, color: "var(--color-text-muted)", marginBottom: 28, textAlign: "center" }}>
+          Track your shots, spot your patterns, practice smarter.
+        </p>
+        <div ref={buttonRef} style={{ display: "flex", justifyContent: "center" }} />
+        {error && <p style={{ color: "var(--color-danger)", fontSize: 14, marginTop: 16, textAlign: "center" }}>{error}</p>}
       </div>
     );
   }

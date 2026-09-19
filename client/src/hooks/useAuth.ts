@@ -16,15 +16,8 @@ export function useAuth() {
       .catch(() => setAuthenticated(false));
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, displayName?: string) => {
-    const r = await authApi.signup(email, password, displayName);
-    setAuthenticated(r.authenticated);
-    setUser(r.user ?? null);
-    return r.authenticated;
-  }, []);
-
-  const login = useCallback(async (email: string, password: string) => {
-    const r = await authApi.login(email, password);
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const r = await authApi.google(credential);
     setAuthenticated(r.authenticated);
     setUser(r.user ?? null);
     return r.authenticated;
@@ -36,5 +29,5 @@ export function useAuth() {
     setUser(null);
   }, []);
 
-  return { authenticated, user, signup, login, logout };
+  return { authenticated, user, loginWithGoogle, logout, setUser };
 }

@@ -10,6 +10,7 @@ const sessionTypeEnum = z.enum(["range", "course", "putting_green"]);
 const createSchema = z.object({
   date: z.string().min(1),
   type: sessionTypeEnum,
+  name: z.string().min(1).nullable().optional(),
   duration_min: z.number().int().positive().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
@@ -24,7 +25,7 @@ sessionsRouter.get("/", async (req, res) => {
 });
 
 sessionsRouter.post("/", validateBody(createSchema), async (req, res) => {
-  res.status(201).json(await sessionsRepo.create(req.userId!, { duration_min: null, notes: null, ...req.body }));
+  res.status(201).json(await sessionsRepo.create(req.userId!, { name: null, duration_min: null, notes: null, ...req.body }));
 });
 
 sessionsRouter.get("/:id", async (req, res) => {

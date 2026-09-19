@@ -14,7 +14,7 @@ export function ContactPicker({ value, onChange }: { value: Contact | null; onCh
     <div>
       <ChoiceGrid options={OPTIONS} value={value} onChange={onChange} columns={5} />
       {value && (
-        <button type="button" onClick={() => onChange(null)} style={{ marginTop: 8, fontSize: 13, color: "#666", background: "none", border: "none" }}>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange(null)} style={{ marginTop: 6, padding: "4px 6px" }}>
           Clear
         </button>
       )}

@@ -16,8 +16,8 @@ export function DrillLibrary({ drills }: { drills: Drill[] }) {
         if (inCategory.length === 0) return null;
         return (
           <div key={category}>
-            <h2 style={{ fontSize: 15, margin: "0 0 10px" }}>{CATEGORY_LABELS[category]}</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <h2 className="section-label">{CATEGORY_LABELS[category]}</h2>
+            <div className="stack">
               {inCategory.map((drill) => (
                 <DrillCard key={drill.id} drill={drill} />
               ))}

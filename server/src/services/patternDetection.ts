@@ -15,7 +15,7 @@ export interface ClubMissBreakdown {
 
 async function rollingBreakdown(
   userId: number,
-  column: "miss_direction" | "contact",
+  column: "shot_result" | "contact",
   window: number,
   sessionType: SessionType | null,
   excludeNull: boolean
@@ -72,12 +72,12 @@ async function toBreakdownList(
   });
 }
 
-export async function getShotMissPatterns(
+export async function getShotResultPatterns(
   userId: number,
   window: number,
   sessionType: SessionType | null
 ): Promise<ClubMissBreakdown[]> {
-  return toBreakdownList(userId, await rollingBreakdown(userId, "miss_direction", window, sessionType, false));
+  return toBreakdownList(userId, await rollingBreakdown(userId, "shot_result", window, sessionType, false));
 }
 
 export async function getShotContactPatterns(
@@ -228,8 +228,8 @@ async function currentPctForTarget(
   target: PlanTargetPattern,
   generatedAt: string
 ): Promise<{ pct: number; sampleSize: number }> {
-  if (target.pattern_type === "shot_miss_direction" || target.pattern_type === "shot_contact") {
-    const column = target.pattern_type === "shot_miss_direction" ? "miss_direction" : "contact";
+  if (target.pattern_type === "shot_result" || target.pattern_type === "shot_contact") {
+    const column = target.pattern_type === "shot_result" ? "shot_result" : "contact";
     const totalRes = await pool.query<{ c: string }>(
       "SELECT COUNT(*) AS c FROM shots WHERE user_id = $1 AND club_id = $2 AND created_at > $3",
       [userId, target.club_id, generatedAt]

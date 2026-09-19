@@ -8,3 +8,5 @@ server/data/*.db-shm
 .env
 *.local
 .DS_Store
+.vercel
+.env*

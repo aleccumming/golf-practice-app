@@ -25,7 +25,7 @@ const RESULT_OPTIONS: { value: PuttResult; label: string }[] = [
   { value: "missed_long", label: "Missed long" },
 ];
 
-export function PuttLogForm({ sessionId }: { sessionId: number | null }) {
+export function PuttLogForm({ ensureSession }: { ensureSession: () => Promise<number | null> }) {
   const [distance, setDistance] = useState<number | null>(null);
   const [customDistance, setCustomDistance] = useState("");
   const [breakDir, setBreakDir] = useState<PuttBreak>("straight");
@@ -43,6 +43,7 @@ export function PuttLogForm({ sessionId }: { sessionId: number | null }) {
     setSaving(true);
     setError(null);
     try {
+      const sessionId = await ensureSession();
       await puttsApi.create({
         session_id: sessionId,
         distance_ft: effectiveDistance,
@@ -60,24 +61,19 @@ export function PuttLogForm({ sessionId }: { sessionId: number | null }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Distance (ft)</h3>
+    <div>
+      <section className="section">
+        <h3 className="section-label">Distance (ft)</h3>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {DISTANCE_CHIPS.map((d) => (
             <button
               key={d}
               type="button"
+              className={`chip${distance === d ? " is-active" : ""}`}
+              style={{ minWidth: 46, padding: "12px 14px" }}
               onClick={() => {
                 setDistance(d);
                 setCustomDistance("");
-              }}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 10,
-                border: distance === d ? "2px solid #2f8f4e" : "1px solid #ccc",
-                background: distance === d ? "#e6f4ea" : "#fff",
-                fontWeight: distance === d ? 700 : 500,
               }}
             >
               {d}
@@ -91,44 +87,33 @@ export function PuttLogForm({ sessionId }: { sessionId: number | null }) {
               setCustomDistance(e.target.value);
               setDistance(null);
             }}
-            style={{ width: 70, padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
+            className="input"
+            style={{ width: 76 }}
           />
         </div>
       </section>
 
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Break</h3>
+      <section className="section">
+        <h3 className="section-label">Break</h3>
         <ChoiceGrid<PuttBreak> options={BREAK_OPTIONS} value={breakDir} onChange={setBreakDir} columns={3} />
       </section>
 
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Slope</h3>
+      <section className="section">
+        <h3 className="section-label">Slope</h3>
         <ChoiceGrid<PuttSlope> options={SLOPE_OPTIONS} value={slope} onChange={setSlope} columns={3} />
       </section>
 
-      <section>
-        <h3 style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>Result</h3>
+      <section className="section">
+        <h3 className="section-label">Result</h3>
         <ChoiceGrid<PuttResult> options={RESULT_OPTIONS} value={result} onChange={setResult} columns={2} />
       </section>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={!canSave}
-        style={{
-          fontSize: 18,
-          padding: 16,
-          borderRadius: 10,
-          background: canSave ? "#2f8f4e" : "#aaa",
-          color: "#fff",
-          border: "none",
-        }}
-      >
+      <button type="button" className="btn btn-primary btn-lg btn-block" onClick={handleSave} disabled={!canSave}>
         {saving ? "Saving..." : "Save putt"}
       </button>
 
-      {error && <p style={{ color: "#c0392b" }}>{error}</p>}
-      <p style={{ fontSize: 13, color: "#666" }}>Logged this session: {loggedCount}</p>
+      {error && <p style={{ color: "var(--color-danger)", fontSize: 13, marginTop: 10 }}>{error}</p>}
+      <p className="hint" style={{ marginTop: 10 }}>Logged this session: {loggedCount}</p>
     </div>
   );
 }

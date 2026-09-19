@@ -10,9 +10,11 @@ export const sessionsApi = {
     return http.get<Session[]>(`/sessions${qs ? `?${qs}` : ""}`);
   },
   get: (id: number) => http.get<SessionDetail>(`/sessions/${id}`),
-  create: (input: { date: string; type: SessionType; duration_min?: number | null; notes?: string | null }) =>
+  create: (input: { date: string; type: SessionType; name?: string | null; duration_min?: number | null; notes?: string | null }) =>
     http.post<Session>("/sessions", input),
-  update: (id: number, input: Partial<{ date: string; type: SessionType; duration_min: number | null; notes: string | null }>) =>
-    http.patch<Session>(`/sessions/${id}`, input),
+  update: (
+    id: number,
+    input: Partial<{ date: string; type: SessionType; name: string | null; duration_min: number | null; notes: string | null }>
+  ) => http.patch<Session>(`/sessions/${id}`, input),
   delete: (id: number) => http.delete<void>(`/sessions/${id}`),
 };

@@ -20,15 +20,8 @@ export function SessionTypeFilter({
         <button
           key={opt.label}
           type="button"
+          className={`chip chip-pill${value === opt.value ? " is-active" : ""}`}
           onClick={() => onChange(opt.value)}
-          style={{
-            fontSize: 12,
-            padding: "6px 10px",
-            borderRadius: 999,
-            border: value === opt.value ? "2px solid #2f8f4e" : "1px solid #ccc",
-            background: value === opt.value ? "#e6f4ea" : "#fff",
-            fontWeight: value === opt.value ? 700 : 500,
-          }}
         >
           {opt.label}
         </button>

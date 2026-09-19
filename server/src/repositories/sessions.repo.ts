@@ -28,10 +28,13 @@ export const sessionsRepo = {
     return rows[0];
   },
 
-  async create(userId: number, input: Pick<Session, "date" | "type" | "duration_min" | "notes">): Promise<Session> {
+  async create(
+    userId: number,
+    input: Pick<Session, "date" | "type" | "duration_min" | "notes"> & { name?: string | null }
+  ): Promise<Session> {
     const { rows } = await pool.query<Session>(
-      "INSERT INTO sessions (user_id, date, type, duration_min, notes) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [userId, input.date, input.type, input.duration_min ?? null, input.notes ?? null]
+      "INSERT INTO sessions (user_id, date, type, name, duration_min, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [userId, input.date, input.type, input.name ?? null, input.duration_min ?? null, input.notes ?? null]
     );
     return rows[0];
   },
@@ -39,14 +42,14 @@ export const sessionsRepo = {
   async update(
     userId: number,
     id: number,
-    input: Partial<Pick<Session, "date" | "type" | "duration_min" | "notes">>
+    input: Partial<Pick<Session, "date" | "type" | "name" | "duration_min" | "notes">>
   ): Promise<Session | undefined> {
     const existing = await this.get(userId, id);
     if (!existing) return undefined;
     const merged = { ...existing, ...input };
     const { rows } = await pool.query<Session>(
-      "UPDATE sessions SET date = $1, type = $2, duration_min = $3, notes = $4 WHERE id = $5 AND user_id = $6 RETURNING *",
-      [merged.date, merged.type, merged.duration_min, merged.notes, id, userId]
+      "UPDATE sessions SET date = $1, type = $2, name = $3, duration_min = $4, notes = $5 WHERE id = $6 AND user_id = $7 RETURNING *",
+      [merged.date, merged.type, merged.name, merged.duration_min, merged.notes, id, userId]
     );
     return rows[0];
   },

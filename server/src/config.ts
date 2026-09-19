@@ -12,5 +12,6 @@ export const config = {
   port: Number(process.env.PORT ?? 3057),
   sessionSecret: required("SESSION_SECRET", "dev-secret-not-for-production"),
   databaseUrl: required("DATABASE_URL"),
+  googleClientId: required("GOOGLE_CLIENT_ID"),
   isProd: process.env.NODE_ENV === "production",
 };
